@@ -5,7 +5,7 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 
 object FrontendBuild extends Build with MicroService {
 
-  override val appName = "hmrc-frontend"
+  override val appName = "mdtp-frontend-microservice"
 
   override lazy val plugins: Seq[Plugins] = Seq(
     SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin
@@ -18,7 +18,7 @@ private object AppDependencies {
   import play.core.PlayVersion
 
   val compile = Seq(
-    "uk.gov.hmrc" %% "frontend-bootstrap" % "1.1.0",
+    "uk.gov.hmrc" %% "frontend-bootstrap" % "1.2.1",
     "uk.gov.hmrc" %% "play-config" % "1.2.0",
     "uk.gov.hmrc" %% "play-json-logger" % "1.0.0",
     "uk.gov.hmrc" %% "play-health" % "1.1.0",
@@ -26,38 +26,19 @@ private object AppDependencies {
     "uk.gov.hmrc" %% "play-ui" % "3.0.0"
   )
 
-  trait TestDependencies {
-    lazy val scope: String = "test"
-    lazy val test : Seq[ModuleID] = ???
+  abstract class TestDependencies(scope: String) {
+    lazy val test : Seq[ModuleID] = Seq(
+      "org.scalatest" %% "scalatest" % "2.2.2" % scope,
+      "org.pegdown" % "pegdown" % "1.4.2" % scope,
+      "org.jsoup" % "jsoup" % "1.7.3" % scope,
+      "com.typesafe.play" %% "play-test" % PlayVersion.current % scope
+    )
   }
 
-  object Test {
-    def apply() = new TestDependencies {
+  object Test extends TestDependencies("test")
+  object IntegrationTest extends TestDependencies("it")
 
-      override lazy val test = Seq(
-        "org.scalatest" %% "scalatest" % "2.2.2" % scope,
-        "org.pegdown" % "pegdown" % "1.4.2" % scope,
-        "org.jsoup" % "jsoup" % "1.7.3" % scope,
-        "com.typesafe.play" %% "play-test" % PlayVersion.current % scope
-      )
-    }.test
-  }
-
-  object IntegrationTest {
-    def apply() = new TestDependencies {
-
-      override lazy val scope = "it"
-
-      override lazy val test = Seq(
-        "org.scalatest" %% "scalatest" % "2.2.2" % scope,
-        "org.pegdown" % "pegdown" % "1.4.2" % scope,
-        "org.jsoup" % "jsoup" % "1.7.3" % scope,
-        "com.typesafe.play" %% "play-test" % PlayVersion.current % scope
-      )
-    }.test
-  }
-
-  def apply() = compile ++ IntegrationTest()
+  def apply() = compile ++ Test.test ++ IntegrationTest.test
 }
 
 
